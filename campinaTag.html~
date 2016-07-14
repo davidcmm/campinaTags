@@ -703,9 +703,9 @@
 
 							//Save user data in CampinaTags!
 							var userResponse = {
-								'id': $scope.userProgress.user_id,
-								'image': $scope.task.info.url_a,
-								'tags': tags
+							'id': $scope.userProgress.user_id,
+							'image': $scope.task.info.url_a,
+							'tags': tags
 							};
 							$http.post('http://miguel:python@localhost:5000/campinaTags/api/v1.0/updateusers', userResponse).then(function(response) {
 							}, function saveTaskErrorCallback(response) {
