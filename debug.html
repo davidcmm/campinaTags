@@ -582,12 +582,15 @@
 			if (!foundInPrevious){//Profile not found in previous version, searching at task-run
 				var finishTime;
 				var offset = 0;
+                alert("Vou chamar profile!");
 				$http.get(apiUrl+'taskrun?project_id='+projectId+'&user_id='+$scope.userProgress.user_id+'&offset='+offset).then(function(response) {
 					var i;
+                  alert("Entrei em profile!");
 					if (response.data.length !== 0) {
 						for (i = 0; i < response.data.length; i++) {
 							var currentData = response.data[i];
 							// Checks if already have any profile data
+                            alert("User Profile " + response.data[i].info.userProfile);
 							if (typeof currentData.info.userProfile != "undefined" && currentData.info.userProfile != '') {
 								alert("Age " + currentData.info.userProfile.age);
 								var currentFinishTime = new Date(currentData.finish_time);
@@ -622,6 +625,9 @@
 			// console.log('Loading user progress...');
 			$http.get(apiUrl+'project/'+projectId+'/userprogress')
 				.then(function(response) {
+                  alert("User Progress " + response.data.total);
+                  alert("User Progress " + response.data.done);
+                  
 					$scope.userProgress.user_id = response.data.user_id;
 					$scope.userProgress.total = response.data.total;
 					$scope.userProgress.done = response.data.done;
@@ -645,6 +651,10 @@
 			$('#loading').fadeIn();
 			$http.get(apiUrl+'project/'+projectId+'/newtask')
 				.then(function(response) {
+                  
+                  alert(response.data.id);
+                  alert(response.data.info);
+                  
 					// Checks if theres no more tasks for the user
 					if (typeof response.data.id != 'undefined') {
 						$('#loading').hide();
@@ -697,20 +707,9 @@
 							//input.setAttribute("data-role", "tagsinput");
 							//input.setAttribute("value", "Hanoi");
 							//parent.appendChild(input);
+							resetTags();
 							//$('input').tagsinput('removeAll');
 							//<input type="text" id="tags" class="form-control" value="Hanoi" data-role="tagsinput" >
-							resetTags();
-
-							//Save user data in CampinaTags!
-							var userResponse = {
-							'id': $scope.userProgress.user_id,
-							'image': $scope.task.info.url_a,
-							'tags': tags
-							};
-							$http.post('http://miguel:python@localhost:5000/campinaTags/api/v1.0/updateusers', userResponse).then(function(response) {
-							}, function saveTaskErrorCallback(response) {
-								$('#error').show();
-							});
 
 							//Tags filled, so save task answer!
 							alert("Tags " + tags.length);
@@ -737,8 +736,6 @@
 								}, function saveTaskErrorCallback(response) {
 									$('#error').show();
 								});
-
-								
 							}else{
 								$('#error-tag').show();
 								setTimeout(function() { $("#error-tag").fadeOut() }, 1000);
