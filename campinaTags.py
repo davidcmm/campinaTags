@@ -24,7 +24,7 @@ import logging
 #Logging configuration!
 def configLogging():
     logger = logging.getLogger('campinaTags')
-    hdlr = logging.FileHandler('./campinaTags.log')
+    hdlr = logging.FileHandler('/var/www/campinaTags/campinaTags/campinaTags.log')
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr) 
@@ -156,6 +156,8 @@ def stringToDic(dic_string):
 
 #Init from DB! Based on https://wiki.postgresql.org/wiki/Using_psycopg2_with_PostgreSQL
 def startFromDB():
+    global images
+    global users
     #Define our connection string
     conn_string = "host='localhost' dbname='campinatags' user='campinatags' password='c@mpin@2016lsD'"
 
@@ -164,7 +166,7 @@ def startFromDB():
 
     # conn.cursor will return a cursor object, you can use this cursor to perform queries
     cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    logger.info("Connected to database ->%s" ("host='localhost' dbname='campinatags'"))
+    logger.info("Connected to database ->%s" % ("host='localhost' dbname='campinatags'"))
 
     # tell postgres to use more work memory
     work_mem = 2048
@@ -183,7 +185,7 @@ def startFromDB():
 			images[record['name']] = {'name': record['name'], 'tags' : stringToDic(record['tags'])}
 
 	    # Retrieve all users
-	    cursor.execute("SELECT * FROM users")
+	    cursor.execute("SELECT * FROM \"user\"")
 	    records = cursor.fetchall()
 	    if len(records) == 0:
 		users = {}
@@ -304,6 +306,6 @@ def update_user():
 #def unauthorized():
  #   return make_response(jsonify({'error': 'Unauthorized access'}), 403)
 
-if __name__ == '__main__':
-    app.run(debug=True)
-    startFromDB()
+#if __name__ == '__main__':
+#    app.run(debug=True)
+startFromDB()
