@@ -1,7 +1,7 @@
 #!flask/bin/python
 from flask import Flask, jsonify
 from flask import abort
-from flask import make_response
+from flask import make_response, render_template
 from flask import request
 #from flask.ext.httpauth import HTTPBasicAuth
 
@@ -40,11 +40,11 @@ logger = configLogging()
 users = {
     '1': {
         'id': 1,
-        'points': 0
+        'points': 10
     },
     '2': {
         'id': 2,
-        'points': 10
+        'points': 0
     }
 }
 
@@ -104,7 +104,14 @@ def crossdomain(origin=None, methods=None, headers=None,
 #Index page demonstration!
 @app.route('/')
 def index():
-    return "Hello, World!"
+    all_users = users.values()
+    sorted_users = sorted(all_users, reverse=True, key=lambda user: user['points'])
+    index = 1
+    for user in sorted_users:
+	user["rank"] = index
+	index = index + 1
+    
+    return render_template("ranking.html", users=sorted_users)
 
 #Retrieving users dic data!
 def get_users(user_id):
