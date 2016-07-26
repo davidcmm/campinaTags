@@ -117,6 +117,7 @@ def index():
 
 #Retrieving users dic data!
 def get_users(user_id):
+    logger.info("GET USER " + user_id + " " + str(users) + " " + str(users.has_key(user_id)))
     if not users.has_key(user_id):
 	return {}
     return users[user_id]
@@ -281,6 +282,8 @@ def update_user():
     tags_to_update = request.json['tags']
     new_user = False
     new_image = False
+
+    logger.info("Start with User to update " + str(user_to_update) + " " + current_user_id)
 
     if len(tags_to_update) == 0:
 	abort(400)
