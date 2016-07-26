@@ -40,11 +40,11 @@ logger = configLogging()
 users = {
     '1': {
         'id': 1,
-        'points': 10
+        'points': 0
     },
     '2': {
         'id': 2,
-        'points': 0
+        'points': 10
     }
 }
 
@@ -104,6 +104,8 @@ def crossdomain(origin=None, methods=None, headers=None,
 #Index page demonstration!
 @app.route('/')
 def index():
+#    return "Hello, World!"
+    users = { '1': {'id': 1, 'points': 10} , '2': {'id': 2,'points': 0 }}
     all_users = users.values()
     sorted_users = sorted(all_users, reverse=True, key=lambda user: user['points'])
     index = 1
@@ -219,22 +221,24 @@ def updateDB(image_to_update, user_to_update, new_user, new_image):
 
     # conn.cursor will return a cursor object, you can use this cursor to perform queries
     cursor = conn.cursor()
+    logger.info("VARS TO DB")
+    logger.info(str(image_to_update) + " " + str(user_to_update) + " " + str(new_user) + " " + str(new_image))
     
     try:
 	    # Update image!
 	    if new_image:
-		cur.execute( "INSERT INTO images (name, tags) VALUES (%s, %s)", (image_to_update['name'], dicToString(image_to_update['tags'])) )
+		cursor.execute( "INSERT INTO images (name, tags) VALUES (%s, %s)", (image_to_update['name'], dicToString(image_to_update['tags'])) )
 	    else:
-		cur.execute( "UPDATE images SET tags = (%s) WHERE name = (%s)", (dicToString(image_to_update['tags']), mage_to_update['name']) )
+		cursor.execute( "UPDATE images SET tags = (%s) WHERE name = (%s)", (dicToString(image_to_update['tags']), image_to_update['name']) )
 
 	    # Update user!
 	    if new_user:
-	    	cur.execute( "INSERT INTO \"user\" (id, points) VALUES (%s, %s)", (user_to_update['id'], user_to_update['points']) )
+	    	cursor.execute( "INSERT INTO \"user\" (id, points) VALUES (%s, %s)", (user_to_update['id'], user_to_update['points']) )
 	    else:
-		cur.execute( "UPDATE \"user\" SET points = (%s) WHERE id = (%s)", (user_to_update['points'], user_to_update['id']) )
+		cursor.execute( "UPDATE \"user\" SET points = (%s) WHERE id = (%s)", (user_to_update['points'], user_to_update['id']) )
 
 	    conn.commit()
-	    cur.close()
+	    cursor.close()
     except:
             logger.error("Error in updating database! %s" % (sys.exc_info()[0]))
 
@@ -242,16 +246,26 @@ def updateDB(image_to_update, user_to_update, new_user, new_image):
 def checkContent(current_user_id, current_image_id, tags_to_update):
     prohibited_words = ["delete ", "remove ", "insert ", "update ", "alter ", "table"]
     
+    logger.info("New checking!!!")
+    logger.info("Checking with " + str(current_user_id) + " " + str(type(current_user_id)) + " " + str(current_image_id) + " " + str(type(current_image_id)) + " " + str(tags_to_update) + " " + str(type(tags_to_update)))
+
     if len(current_user_id) == 0 or len(current_image_id) == 0 or len(tags_to_update) == 0:
+	logger.info("Something is 0" + len(current_user_id) + " " + len(current_image_id) + " " + len(tags_to_update))
 	return False
 
     for word in prohibited_words:
-	if current_user_id.find(word) or current_image_id.find(word):
+        logger.info("Word " + word)
+        logger.info("USER ID " + str(current_user_id.find(word)))
+	logger.info("IMAGE ID" + str(current_image_id.find(word)))
+	if current_user_id.find(word) != -1 or current_image_id.find(word) != -1:
+                logger.info("Prohibited word in user or image" + current_user_id + " " + current_image_id)
 		return False
 	for tag in tags_to_update:
-		if tag.find(word):
+		logger.info("Tag " + tag + " " + str(tag.find(word)))
+		if tag.find(word) != -1:
+			logger.info("Prohibited word in tag" + tag)
 			return False
-
+    logger.info("Returning true!")
     return True
 
 @app.route('/campinaTags/api/v1.0/updateusers', methods=['POST'])
@@ -260,8 +274,8 @@ def update_user():
     if not request.json or not 'id' in request.json or not 'image' in request.json or not 'tags' in request.json:
         abort(400)
     
-    current_user_id = request.json['id']
-    current_image_id = request.json['image']
+    current_user_id = str(request.json['id'])
+    current_image_id = str(request.json['image'])
     user_to_update = get_users(current_user_id)
     image_to_update = get_images(current_image_id)
     tags_to_update = request.json['tags']
@@ -279,12 +293,14 @@ def update_user():
 	images[current_image_id] = image_to_update
 	new_image = True
 
+    logger.info("Checking content!" + str(tags_to_update))
     if not checkContent(current_user_id, current_image_id, tags_to_update):
 	return jsonify({''}), 400
 
     #Computing points!
     points = 0
     total_occurrences = sum(image_to_update['tags'].values())
+    logger.info("Computing points!")
     for tag in tags_to_update:
   	if not tag in image_to_update['tags'].keys():#New tag!
 		points += 10
@@ -294,13 +310,17 @@ def update_user():
 		image_to_update['tags'][tag] += 1
 
     #Updating set of tags!      
-    image_to_update['tags'].update(tags_to_update)
+    logger.info("Updating tags!")
+    #image_to_update['tags'].update(tags_to_update)
 
     #Updating points of user
+    logger.info("Updating user points")
     user_to_update['points'] += points
 
+    logger.info("Updating db")
     updateDB(image_to_update, user_to_update, new_user, new_image)
 
+    logger.info("Returning to page succes!" + str(user_to_update))
     return jsonify({'user': user_to_update}), 201
 
 #@auth.get_password
